@@ -1,0 +1,122 @@
+name: Release Workflow
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '.github/workflows/**'
+      - 'README.md'
+      - 'CHANGELOG.md'
+
+  workflow_dispatch:
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    outputs:
+      new_tag: ${{ steps.get_tag.outputs.new_tag }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Git
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+
+      - name: Generate new tag
+        id: get_tag
+        run: |
+          latest=$(git tag --sort=-v:refname | head -n 1)
+          echo "Latest tag: $latest"
+          if [[ -z "$latest" ]]; then
+            new_tag="1.0.0"
+          else
+            version=${latest#v}
+            major=$(echo "$version" | cut -d. -f1)
+            minor=$(echo "$version" | cut -d. -f2)
+            patch=$(echo "$version" | cut -d. -f3)
+            patch=$((patch + 1))
+            new_tag="$major.$minor.$patch"
+          fi
+          echo "new_tag=$new_tag" >> "$GITHUB_OUTPUT"
+
+      - name: Create and push tag
+        run: |
+          git tag ${{ steps.get_tag.outputs.new_tag }}
+          git push origin ${{ steps.get_tag.outputs.new_tag }}
+
+  build-docker:
+    name: Build docker image
+    runs-on: ubuntu-latest
+    needs: tag
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Build
+        env:
+          CI_USERNAME: ${{ secrets.CI_USERNAME }}
+          CI_TOKEN: ${{ secrets.CI_TOKEN }}
+        run: |
+          owner="${{ github.repository_owner }}"
+          lower_owner="${owner,,}"
+          mvn compile jib:build -DskipTests -Djib.to.image=ghcr.io/${lower_owner}/products-api:${{ needs.tag.outputs.new_tag }}
+
+  build-helm:
+    name: Build Helm Chart
+    runs-on: ubuntu-latest
+    needs: tag
+    env:
+      HELM_CHART_DIR: helm/products-api
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.14.0
+
+      - name: Set up chart-testing
+        uses: helm/chart-testing-action@v2.6.1
+
+      - name: Lint Helm chart
+        run: ct lint --target-branch=main --config ct.yaml
+
+      - name: Build Helm dependencies
+        run: bash helm/scripts/dep-build.sh ${{ env.HELM_CHART_DIR}}
+
+      - name: Package Helm chart
+        run: |
+          cd "${{ env.HELM_CHART_DIR }}"
+          helm package . --version "${{ needs.tag.outputs.new_tag }}"
+
+      - name: Helm registry login
+        run: echo ${{ secrets.GITHUB_TOKEN }} | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Push Helm chart
+        run: |
+          export HELM_EXPERIMENTAL_OCI=1
+          cd "${{ env.HELM_CHART_DIR }}"
+          OUTFILE="$(basename ${{ env.HELM_CHART_DIR }})-${{ needs.tag.outputs.new_tag }}.tgz"
+          owner="${{ github.repository_owner }}"
+          lower_owner="${owner,,}"
+          helm push ${OUTFILE} oci://ghcr.io/${lower_owner}/products-api
