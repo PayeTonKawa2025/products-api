@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitMQConfig {
 
     public static final String EXCHANGE_NAME = "global.events";
-    public static final String QUEUE_NAME = "service.order.queue";
+    public static final String QUEUE_NAME = "service.product.queue";
 
     @Bean
     public TopicExchange eventExchange() {
@@ -19,16 +19,16 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public Queue orderQueue() {
+    public Queue productQueue() {
         return new Queue(QUEUE_NAME);
     }
 
     @Bean
-    public Binding orderBinding(Queue orderQueue, TopicExchange exchange) {
+    public Binding productBinding(Queue productQueue, TopicExchange exchange) {
         return BindingBuilder
-                .bind(orderQueue)
+                .bind(productQueue)
                 .to(exchange)
-                .with("order.*");
+                .with("product.*");
     }
 
 }
