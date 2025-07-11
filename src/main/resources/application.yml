@@ -1,0 +1,23 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: product
+
+  datasource:
+    url: jdbc:postgresql://product-db:5434/productdb
+    username: yourdbuser
+    password: yourdbpassword
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  # Optional logging
+  logging:
+    level:
+      org.springframework: INFO
