@@ -1,13 +1,17 @@
 package fr.payetonkawa.products.service;
 
+import fr.payetonkawa.common.exchange.ExchangeMessage;
+import fr.payetonkawa.common.exchange.ExchangeQueues;
 import fr.payetonkawa.products.dto.ProductDto;
 import fr.payetonkawa.products.entity.Product;
+import fr.payetonkawa.products.event.EventPublisher;
 import fr.payetonkawa.products.exception.MissingDataException;
 import fr.payetonkawa.products.repository.ProductRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -15,6 +19,7 @@ import java.util.Optional;
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final EventPublisher eventPublisher;
 
     public List<ProductDto> getAllProducts() {
         return ProductDto.fromEntities(productRepository.findAll());
@@ -54,6 +59,14 @@ public class ProductService {
         product.setColor(updatedProduct.getColor());
         product.setStock(updatedProduct.getStock());
         Product savedProduct = productRepository.save(product);
+        eventPublisher.sendEvent(EventPublisher.ROUTING_KEY_PRODUCT_PRICE_UPDATED, ExchangeMessage.builder()
+                .payload(Map.of(
+                        "productId", savedProduct.getId(),
+                        "newPrice", savedProduct.getPrice()
+                ))
+                .routingKey(EventPublisher.ROUTING_KEY_PRODUCT_PRICE_UPDATED)
+                .exchangeId(ExchangeQueues.EXCHANGE_NAME)
+                .build());
         return ProductDto.fromEntity(savedProduct);
     }
 
