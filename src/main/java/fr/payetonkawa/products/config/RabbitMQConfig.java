@@ -28,7 +28,7 @@ public class RabbitMQConfig {
         return BindingBuilder
                 .bind(productQueue)
                 .to(exchange)
-                .with("product.*");
+                .with("#");
     }
 
 }
