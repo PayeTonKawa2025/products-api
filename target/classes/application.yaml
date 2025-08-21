@@ -1,0 +1,30 @@
+server:
+  port: 8085
+  error:
+    include-stacktrace: always
+
+spring:
+  application:
+    name: product
+
+  datasource:
+    url: jdbc:postgresql://product-db:5435/productdb
+    username: postgres
+    password: admin
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  # Optional logging
+  logging:
+    level:
+      root: DEBUG
+      org.springframework.web: DEBUG
+      com.paye_ton_kawa: DEBUG
+      org.springframework.amqp: DEBUG
+      org.springframework.amqp.rabbit.core.RabbitTemplate: DEBUG
+      org.springframework.amqp.rabbit.listener: DEBUG
+

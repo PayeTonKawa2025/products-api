@@ -1,0 +1,12 @@
+C:\Users\chira\Documents\Pro\MSPR\products-api\src\main\java\fr\payetonkawa\products\messaging\ExchangeQueues.java
+C:\Users\chira\Documents\Pro\MSPR\products-api\src\main\java\fr\payetonkawa\products\entity\Product.java
+C:\Users\chira\Documents\Pro\MSPR\products-api\src\main\java\fr\payetonkawa\products\event\EventListener.java
+C:\Users\chira\Documents\Pro\MSPR\products-api\src\main\java\fr\payetonkawa\products\event\EventPublisher.java
+C:\Users\chira\Documents\Pro\MSPR\products-api\src\main\java\fr\payetonkawa\products\controller\ProductController.java
+C:\Users\chira\Documents\Pro\MSPR\products-api\src\main\java\fr\payetonkawa\products\exception\MissingDataException.java
+C:\Users\chira\Documents\Pro\MSPR\products-api\src\main\java\fr\payetonkawa\products\messaging\ExchangeMessage.java
+C:\Users\chira\Documents\Pro\MSPR\products-api\src\main\java\fr\payetonkawa\products\service\ProductService.java
+C:\Users\chira\Documents\Pro\MSPR\products-api\src\main\java\fr\payetonkawa\products\ProductsApplication.java
+C:\Users\chira\Documents\Pro\MSPR\products-api\src\main\java\fr\payetonkawa\products\dto\ProductDto.java
+C:\Users\chira\Documents\Pro\MSPR\products-api\src\main\java\fr\payetonkawa\products\repository\ProductRepository.java
+C:\Users\chira\Documents\Pro\MSPR\products-api\src\main\java\fr\payetonkawa\products\config\RabbitMQConfig.java
