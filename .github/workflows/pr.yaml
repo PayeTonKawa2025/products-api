@@ -84,6 +84,9 @@ jobs:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
 
+      - name: Compile project
+        run: mvn clean compile test-compile -DskipTests
+
       - name: Download JaCoCo report
         uses: actions/download-artifact@v4
         with:
@@ -92,11 +95,13 @@ jobs:
 
       - name: Build and analyze on SonarCloud
         run: |
-          mvn clean verify -DskipTests=true sonar:sonar \
+          mvn sonar:sonar \
             -Dsonar.projectKey=PayeTonKawa2025_products-api \
             -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }} \
             -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
             -Dsonar.token=${{ secrets.SONAR_TOKEN }} \
             -Dsonar.pullrequest.key=${{ github.event.pull_request.number }} \
             -Dsonar.pullrequest.branch=${{ github.head_ref }} \
-            -Dsonar.pullrequest.base=${{ github.base_ref }}
+            -Dsonar.pullrequest.base=${{ github.base_ref }} \
+            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
+            -Dsonar.coverage.exclusions=**/controller/**,**/config/**

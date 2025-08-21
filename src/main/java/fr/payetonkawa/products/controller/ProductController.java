@@ -1,7 +1,6 @@
 package fr.payetonkawa.products.controller;
 
 import fr.payetonkawa.products.dto.ProductDto;
-import fr.payetonkawa.products.entity.Product;
 import fr.payetonkawa.products.service.ProductService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
