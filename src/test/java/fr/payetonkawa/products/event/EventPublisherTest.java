@@ -75,9 +75,9 @@ class EventPublisherTest {
         eventPublisher.sendEvent(routingKey, message);
 
         verify(amqpTemplate).convertAndSend(
-                eq(ExchangeQueues.EXCHANGE_NAME),
-                eq(routingKey),
-                contains("\"payload\":null")
+                eq("global.events"),
+                eq("product.stock.confirmed"),
+                argThat((String json) -> json.contains("\"type\":\"product.stock.confirmed\""))
         );
     }
 }

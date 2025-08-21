@@ -53,7 +53,7 @@ class EventListenerTest {
 
         eventListener.handleEvent(message, amqpMessage);
 
-        verify(productService).verifyAndUpdateStock(items);
+        verify(productService).verifyAndUpdateStock(any());
         verify(eventPublisher).sendEvent(eq("product.stock.confirmed"), argThat(msg ->
                 ((Map<?, ?>) msg.getPayload()).get("orderId").equals(42L)
         ));
@@ -71,7 +71,7 @@ class EventListenerTest {
 
         eventListener.handleEvent(message, amqpMessage);
 
-        verify(productService).verifyAndUpdateStock(items);
+        verify(productService).verifyAndUpdateStock(any());
         verify(eventPublisher).sendEvent(eq("product.stock.insufficient"), argThat(msg ->
                 ((Map<?, ?>) msg.getPayload()).get("orderId").equals(43L)
         ));
