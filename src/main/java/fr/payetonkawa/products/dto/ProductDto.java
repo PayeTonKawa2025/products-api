@@ -1,11 +1,17 @@
 package fr.payetonkawa.products.dto;
 
 import fr.payetonkawa.products.entity.Product;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class ProductDto {
 
     private Long id;

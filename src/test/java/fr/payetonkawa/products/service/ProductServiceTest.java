@@ -12,6 +12,8 @@ import org.mockito.MockitoAnnotations;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Map;
+import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -33,75 +35,115 @@ class ProductServiceTest {
     void testGetAllProducts() {
         Product product = new Product();
         product.setId(1L);
-        product.setName("Test Product");
+        product.setName("Test");
         product.setPrice(10.0);
+        List<Product> products = List.of(product);
+        when(productRepository.findAll()).thenReturn(products);
 
-        when(productRepository.findAll()).thenReturn(List.of(product));
+        List<ProductDto> result = productService.getAllProducts();
 
-        List<ProductDto> products = productService.getAllProducts();
-
-        assertNotNull(products);
-        assertEquals(1, products.size());
-        assertEquals("Test Product", products.get(0).getName());
-        verify(productRepository, times(1)).findAll();
+        assertEquals(1, result.size());
+        assertEquals("Test", result.get(0).getName());
+        verify(productRepository).findAll();
     }
 
     @Test
-    void testGetProductById() {
+    void testGetProductByIdFound() {
         Product product = new Product();
         product.setId(1L);
-        product.setName("Test Product");
+        product.setName("Test");
         product.setPrice(10.0);
-
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
 
-        Optional<ProductDto> productDto = productService.getProductById(1L);
+        Optional<ProductDto> result = productService.getProductById(1L);
 
-        assertTrue(productDto.isPresent());
-        assertEquals("Test Product", productDto.get().getName());
-        verify(productRepository, times(1)).findById(1L);
+        assertTrue(result.isPresent());
+        assertEquals("Test", result.get().getName());
     }
 
     @Test
-    void testCreateProduct() {
-        Product product = new Product();
-        product.setId(1L);
-        product.setName("Test Product");
-        product.setPrice(10.0);
+    void testGetProductByIdNotFound() {
+        when(productRepository.findById(1L)).thenReturn(Optional.empty());
 
-        ProductDto productDto = new ProductDto();
-        productDto.setName("Test Product");
-        productDto.setPrice(10.0);
+        Optional<ProductDto> result = productService.getProductById(1L);
 
-        when(productRepository.save(any(Product.class))).thenReturn(product);
-
-        ProductDto createdProduct = productService.createProduct(productDto);
-
-        assertNotNull(createdProduct);
-        assertEquals("Test Product", createdProduct.getName());
-        verify(productRepository, times(1)).save(any(Product.class));
+        assertTrue(result.isEmpty());
     }
 
     @Test
-    void testUpdateProduct() {
-        Product product = new Product();
-        product.setId(1L);
-        product.setName("Old Product");
-        product.setPrice(5.0);
+    void testCreateProductValid() {
+        ProductDto dto = ProductDto.builder()
+                .name("Test")
+                .price(10.0)
+                .description("desc")
+                .color("red")
+                .stock(5)
+                .build();
 
-        ProductDto updatedProductDto = new ProductDto();
-        updatedProductDto.setName("Updated Product");
-        updatedProductDto.setPrice(15.0);
+        Product saved = new Product();
+        saved.setId(1L);
+        saved.setName("Test");
+        saved.setPrice(10.0);
+        saved.setDescription("desc");
+        saved.setColor("red");
+        saved.setStock(5);
 
-        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
-        when(productRepository.save(any(Product.class))).thenReturn(product);
+        when(productRepository.save(any(Product.class))).thenReturn(saved);
 
-        ProductDto updatedProduct = productService.updateProduct(1L, updatedProductDto);
+        ProductDto result = productService.createProduct(dto);
 
-        assertNotNull(updatedProduct);
-        assertEquals("Updated Product", updatedProduct.getName());
-        verify(productRepository, times(1)).findById(1L);
-        verify(productRepository, times(1)).save(any(Product.class));
+        assertNotNull(result);
+        assertEquals("Test", result.getName());
+        assertEquals(10.0, result.getPrice());
+        verify(productRepository).save(any(Product.class));
+    }
+
+    @Test
+    void testCreateProductInvalid() {
+        ProductDto dto = ProductDto.builder()
+                .name(null)
+                .price(0)
+                .build();
+
+        assertThrows(IllegalArgumentException.class, () -> productService.createProduct(dto));
+    }
+
+    @Test
+    void testUpdateProductFound() {
+        Product existing = new Product();
+        existing.setId(1L);
+        existing.setName("Old");
+        existing.setPrice(5.0);
+        existing.setDescription("old desc");
+        existing.setColor("blue");
+        existing.setStock(2);
+
+        ProductDto dto = ProductDto.builder()
+                .name("New")
+                .price(15.0)
+                .description("new desc")
+                .color("green")
+                .stock(10)
+                .build();
+
+        when(productRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(productRepository.save(any(Product.class))).thenReturn(existing);
+
+        ProductDto result = productService.updateProduct(1L, dto);
+
+        assertEquals("New", result.getName());
+        assertEquals(15.0, result.getPrice());
+        assertEquals("new desc", result.getDescription());
+        assertEquals("green", result.getColor());
+        assertEquals(10, result.getStock());
+    }
+
+    @Test
+    void testUpdateProductNotFound() {
+        ProductDto dto = ProductDto.builder().name("Test").price(10.0).build();
+        when(productRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(MissingDataException.class, () -> productService.updateProduct(1L, dto));
     }
 
     @Test
@@ -110,29 +152,69 @@ class ProductServiceTest {
 
         productService.deleteProduct(1L);
 
-        verify(productRepository, times(1)).deleteById(1L);
+        verify(productRepository).deleteById(1L);
     }
 
     @Test
-    void testCreateProductInvalidData() {
-        ProductDto productDto = new ProductDto();
-        productDto.setName(null);
-        productDto.setPrice(0);
+    void testVerifyAndUpdateStockSuccess() {
+        Product product = new Product();
+        product.setId(1L);
+        product.setStock(10);
 
-        assertThrows(IllegalArgumentException.class, () -> productService.createProduct(productDto));
+        Map<String, Object> item = new HashMap<>();
+        item.put("itemId", 1L);
+        item.put("quantity", 5);
+
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(productRepository.save(any(Product.class))).thenReturn(product);
+
+        boolean result = productService.verifyAndUpdateStock(List.of(item));
+
+        assertTrue(result);
+        verify(productRepository, times(2)).findById(1L);
+        verify(productRepository).save(any(Product.class));
+    }
+
+    @Test
+    void testVerifyAndUpdateStockFail() {
+        Product product = new Product();
+        product.setId(1L);
+        product.setStock(2);
+
+        Map<String, Object> item = new HashMap<>();
+        item.put("itemId", 1L);
+        item.put("quantity", 5);
+
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+
+        boolean result = productService.verifyAndUpdateStock(List.of(item));
+
+        assertFalse(result);
+        verify(productRepository).findById(1L);
         verify(productRepository, never()).save(any(Product.class));
     }
 
     @Test
-    void testUpdateProductNotFound() {
+    void testRestoreStockProductFound() {
+        Product product = new Product();
+        product.setId(1L);
+        product.setStock(5);
+
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(productRepository.save(any(Product.class))).thenReturn(product);
+
+        productService.restoreStock(1L, 3);
+
+        assertEquals(8, product.getStock());
+        verify(productRepository).save(product);
+    }
+
+    @Test
+    void testRestoreStockProductNotFound() {
         when(productRepository.findById(1L)).thenReturn(Optional.empty());
 
-        ProductDto updatedProductDto = new ProductDto();
-        updatedProductDto.setName("Updated Product");
-        updatedProductDto.setPrice(15.0);
+        productService.restoreStock(1L, 3);
 
-        assertThrows(MissingDataException.class, () -> productService.updateProduct(1L, updatedProductDto));
-        verify(productRepository, times(1)).findById(1L);
         verify(productRepository, never()).save(any(Product.class));
     }
 }
