@@ -1,0 +1,145 @@
+{
+	"info": {
+		"_postman_id": "f0e8237d-e664-4b8e-8ff0-00918aab4352",
+		"name": "Products-api",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "21278304"
+	},
+	"item": [
+		{
+			"name": "Get all products",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{HOST}}",
+					"host": [
+						"{{HOST}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get product by id",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{HOST}}/{{PRODUCTID}}",
+					"host": [
+						"{{HOST}}"
+					],
+					"path": [
+						"{{PRODUCTID}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create product",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"Product1\",\r\n    \"price\": 12.1,\r\n    \"description\": \"A super product\",\r\n    \"color\": \"blue\",\r\n    \"stock\": 34\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{HOST}}",
+					"host": [
+						"{{HOST}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update product by id",
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"Product1\",\r\n    \"price\": 12.1,\r\n    \"description\": \"A super product\",\r\n    \"color\": \"blue\",\r\n    \"stock\": 34\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{HOST}}/{{PRODUCTID}}",
+					"host": [
+						"{{HOST}}"
+					],
+					"path": [
+						"{{PRODUCTID}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete product by id",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"Super\"\r\n}"
+				},
+				"url": {
+					"raw": "{{HOST}}/{{PRODUCTID}}",
+					"host": [
+						"{{HOST}}"
+					],
+					"path": [
+						"{{PRODUCTID}}"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "HOST",
+			"value": "http://localhost:8080/v1",
+			"type": "string"
+		},
+		{
+			"key": "PRODUCTID",
+			"value": "1",
+			"type": "string"
+		}
+	]
+}
