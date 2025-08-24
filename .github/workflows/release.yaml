@@ -4,10 +4,6 @@ on:
   push:
     branches:
       - main
-    paths-ignore:
-      - '.github/workflows/**'
-      - 'README.md'
-      - 'CHANGELOG.md'
 
   workflow_dispatch:
 
@@ -79,44 +75,3 @@ jobs:
           owner="${{ github.repository_owner }}"
           lower_owner="${owner,,}"
           mvn compile jib:build -DskipTests -Djib.to.image=ghcr.io/${lower_owner}/products-api:${{ needs.tag.outputs.new_tag }}
-
-  build-helm:
-    name: Build Helm Chart
-    runs-on: ubuntu-latest
-    needs: tag
-    env:
-      HELM_CHART_DIR: helm/products-api
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Helm
-        uses: azure/setup-helm@v4
-        with:
-          version: v3.14.0
-
-      - name: Set up chart-testing
-        uses: helm/chart-testing-action@v2.6.1
-
-      - name: Lint Helm chart
-        run: ct lint --target-branch=main --config ct.yaml
-
-      - name: Build Helm dependencies
-        run: bash helm/scripts/dep-build.sh ${{ env.HELM_CHART_DIR}}
-
-      - name: Package Helm chart
-        run: |
-          cd "${{ env.HELM_CHART_DIR }}"
-          helm package . --version "${{ needs.tag.outputs.new_tag }}"
-
-      - name: Helm registry login
-        run: echo ${{ secrets.GITHUB_TOKEN }} | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
-
-      - name: Push Helm chart
-        run: |
-          export HELM_EXPERIMENTAL_OCI=1
-          cd "${{ env.HELM_CHART_DIR }}"
-          OUTFILE="$(basename ${{ env.HELM_CHART_DIR }})-${{ needs.tag.outputs.new_tag }}.tgz"
-          owner="${{ github.repository_owner }}"
-          lower_owner="${owner,,}"
-          helm push ${OUTFILE} oci://ghcr.io/${lower_owner}/products-api
